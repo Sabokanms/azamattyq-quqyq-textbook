@@ -1,13 +1,4 @@
-:root {
-  --bg: #f5f4ef;
-  --panel: #fffefa;
-  --panel-2: #e4e9de;
-  --text: #192d29;
-  --muted: #69746e;
-  --accent: #244e44;
-  --accent-2: #c35d3c;
-  --border: #dce0d7;
-}
+/* Shared palette is defined in theme.css. */
 
 *,
 *::before,
@@ -245,7 +236,7 @@ a { color: inherit; text-decoration: none; }
   max-width: 100%;
   padding: 5px 10px;
   border-radius: 5px;
-  background: #f4e8de;
+  background: var(--panel-2);
   color: var(--accent-2);
   font-size: 11px;
   font-weight: 600;

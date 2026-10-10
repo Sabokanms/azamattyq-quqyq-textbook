@@ -26,7 +26,7 @@
 .reader-announcement { margin: 0; color: var(--accent); font-size: 12px; }
 .reader-announcement:not(:empty) { margin-bottom: 20px; }
 .reader-article { max-width: 76ch; margin: 28px auto 0; padding-right: 34px; }
-.reader-paragraph { position: relative; scroll-margin-top: 128px; }
+.reader-paragraph { position: relative; scroll-margin-top: max(128px, var(--site-header-clearance, 128px)); }
 .reader-bookmark { position: absolute; top: 0; right: -32px; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; text-indent: 0; opacity: .35; }
 .reader-paragraph:hover > .reader-bookmark, .reader-bookmark:focus-visible, .reader-bookmark[aria-pressed='true'] { opacity: 1; }
 .reader-bookmark:hover { background: var(--panel-2); color: var(--accent); }

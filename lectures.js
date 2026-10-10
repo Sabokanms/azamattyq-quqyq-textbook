@@ -2098,6 +2098,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. ПОЛУЧЕНИЕ ЭЛЕМЕНТОВ DOM ---
     const lessonListEl = document.getElementById('lesson-list');
+    const courseExamEl = document.getElementById('course-exam');
+    const courseStudyBtn = document.getElementById('course-study-btn');
+    const courseStudyLabel = document.getElementById('course-study-label');
+    const courseCurrentLessonEl = document.getElementById('course-current-lesson');
     const contentTitleEl = document.getElementById('content-title');
     const lectureContentEl = document.getElementById('lecture-content');
     const testContentEl = document.getElementById('test-content');
@@ -2136,53 +2140,106 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/(^|[.!?]\s+)(\p{L})/gu, (_, prefix, letter) => prefix + letter.toLocaleUpperCase('kk'));
     }
 
-    function renderLessonList() {
-        lessonListEl.innerHTML = ''; 
-        
-        courseData.forEach(lesson => {
-            const item = document.createElement('li');
-            item.className = 'lesson-item';
-            item.dataset.id = lesson.id;
-            
-            if (lesson.id === currentLessonId) item.classList.add('active');
-            if (lesson.status === 'completed') item.classList.add('completed');
-            
-            const isExam = lesson.type === 'exam';
-            item.classList.toggle('lesson-exam', isExam);
-            const iconPath = lesson.status === 'completed'
-                    ? '<path d="m5 12 4 4L19 6"/>'
-                    : '<path d="m9 5 7 7-7 7"/>';
-            const number = isExam
-                ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v4a5 5 0 0 1-10 0Zm0 2H4v2a4 4 0 0 0 4 4m9-6h3v2a4 4 0 0 1-4 4m-4 1v5m-4 4h8m-10 0h12"/></svg>'
-                : String(lesson.id).padStart(2, '0');
-            item.innerHTML = `
-                <span class="lesson-number" aria-hidden="true">${number}</span>
-                <span class="lesson-label">${escapeQuizText(getLessonMenuTitle(lesson))}</span>
-                <span class="lesson-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${iconPath}</svg></span>
-            `;
-            
-            item.setAttribute('role', 'button');
-            item.setAttribute('aria-label', `${lesson.title}${lesson.status === 'completed' ? '. Аяқталған' : ''}`);
-            item.onclick = () => loadLesson(lesson.id);
-            item.tabIndex = 0;
-            if (lesson.id === currentLessonId) item.setAttribute('aria-current', 'true');
-            item.addEventListener('keydown', event => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    loadLesson(lesson.id);
-                }
-            });
-            
-            lessonListEl.appendChild(item);
-        });
+    const lessonGroups = [
+        { start: 1, end: 3, title: 'Құқықтың негізі' },
+        { start: 4, end: 7, title: 'Құқық қатысушылары' },
+        { start: 8, end: 12, title: 'Объектілер мен мәмілелер' },
+        { start: 13, end: 15, title: 'Меншік, міндеттеме, шарт' }
+    ];
+
+    function createLessonButton(lesson) {
+        const item = document.createElement('button');
+        const isExam = lesson.type === 'exam';
+        const isActive = lesson.id === currentLessonId;
+        const isCompleted = lesson.status === 'completed';
+        const state = isActive ? 'Қазір ашық' : isCompleted ? 'Аяқталды' : '';
+        const title = isExam ? 'Қорытынды емтихан' : getLessonMenuTitle(lesson);
+        const subtitle = isExam ? `${lesson.quiz.length} сұрақ · 15 тақырып${state ? ` · ${state}` : ''}` : state;
+        const iconPath = isCompleted
+            ? '<path d="m5 12 4 4L19 6"/>'
+            : '<path d="m9 5 7 7-7 7"/>';
+        const number = isExam
+            ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v4a5 5 0 0 1-10 0Zm0 2H4v2a4 4 0 0 0 4 4m9-6h3v2a4 4 0 0 1-4 4m-4 1v5m-4 4h8m-10 0h12"/></svg>'
+            : String(lesson.id).padStart(2, '0');
+
+        item.type = 'button';
+        item.className = 'lesson-item';
+        item.dataset.id = lesson.id;
+        item.classList.toggle('lesson-exam', isExam);
+        item.classList.toggle('active', isActive);
+        item.classList.toggle('completed', isCompleted);
+        item.innerHTML = `
+            <span class="lesson-number" aria-hidden="true">${number}</span>
+            <span class="lesson-copy">
+                <span class="lesson-label">${escapeQuizText(title)}</span>
+                ${subtitle ? `<span class="lesson-state">${escapeQuizText(subtitle)}</span>` : ''}
+            </span>
+            <span class="lesson-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${iconPath}</svg></span>
+        `;
+        item.setAttribute('aria-label', `${isExam ? title : lesson.title}${subtitle ? `. ${subtitle}` : ''}`);
+        if (isActive) item.setAttribute('aria-current', 'true');
+        item.addEventListener('click', () => loadLesson(lesson.id));
+        return item;
     }
+
+    function renderLessonList(openLessonId = null) {
+        const openGroups = new Map([...lessonListEl.querySelectorAll('.lesson-group')]
+            .map(group => [Number(group.dataset.group), group.open]));
+        lessonListEl.replaceChildren();
+
+        lessonGroups.forEach(group => {
+            const details = document.createElement('details');
+            details.className = 'lesson-group';
+            details.dataset.group = group.start;
+            const containsLesson = id => id >= group.start && id <= group.end;
+            details.open = containsLesson(openLessonId)
+                || (openGroups.has(group.start) ? openGroups.get(group.start) : containsLesson(currentLessonId));
+            details.innerHTML = `
+                <summary class="lesson-group-summary">
+                    <span class="lesson-group-heading">
+                        <span class="lesson-group-range">${String(group.start).padStart(2, '0')}–${String(group.end).padStart(2, '0')} тақырып</span>
+                        <span class="lesson-group-title">${escapeQuizText(group.title)}</span>
+                    </span>
+                    <svg class="lesson-group-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </summary>
+            `;
+            const list = document.createElement('ol');
+            list.className = 'lesson-group-list';
+            list.start = group.start;
+            courseData.filter(lesson => lesson.type === 'lecture' && containsLesson(lesson.id)).forEach(lesson => {
+                const row = document.createElement('li');
+                row.appendChild(createLessonButton(lesson));
+                list.appendChild(row);
+            });
+            details.appendChild(list);
+            lessonListEl.appendChild(details);
+        });
+
+        courseExamEl.replaceChildren(createLessonButton(courseData.find(lesson => lesson.type === 'exam')));
+    }
+
+    function focusCourseContent() {
+        contentTitleEl.focus({ preventScroll: true });
+        contentTitleEl.scrollIntoView({ block: 'start' });
+    }
+
+    function updateCourseContext(lesson, isQuiz = false) {
+        const isExam = lesson.type === 'exam';
+        courseCurrentLessonEl.textContent = isExam ? 'Қорытынды емтихан' : `${lesson.id} / 15 · ${isQuiz ? 'Тест' : 'Дәріс'}`;
+        courseStudyLabel.textContent = isQuiz
+            ? isExam ? 'Емтиханға оралу' : 'Тестке оралу'
+            : isExam ? 'Емтихан туралы' : `${lesson.id}-дәрісті оқу`;
+    }
+
+    courseStudyBtn.addEventListener('click', focusCourseContent);
 
     // --- 4. ФУНКЦИЯ ЗАГРУЗКИ КОНТЕНТА (ЛЕКЦИЯ ИЛИ ЭКЗАМЕН) ---
     // ===== БҰЛ ФУНКЦИЯ ЖАҢАРТЫЛДЫ (ЭТА ФУНКЦИЯ ОБНОВЛЕНА) =====
     // --- 4. ФУНКЦИЯ ЗАГРУЗКИ КОНТЕНТА (ТОЛЫҒЫМЕН ЖАҢАРТЫЛҒАН) ---
-    function loadLesson(id) {
+    function loadLesson(id, { focusContent = true } = {}) {
         const lesson = courseData.find(l => l.id === id);
         if (!lesson) return;
+        const previousLessonId = currentLessonId;
         currentQuizAttempt = null;
 
         if (currentLessonId === 16 && id !== 16) {
@@ -2200,6 +2257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isLecture = lesson.type === 'lecture';
         const isExam = lesson.type === 'exam';
+        updateCourseContext(lesson);
 
         lectureContentEl.style.display = isLecture ? 'block' : 'none';
         testContentEl.style.display = isExam ? 'block' : 'none'; 
@@ -2228,13 +2286,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const labPath = getLabFilePath(lesson);
             if (labPath) {
                 labWorkBtn.style.display = 'inline-flex';
-                labWorkBtn.setAttribute('aria-label', `${lesson.id}-зертханалық жұмысты ашу`);
+                labWorkBtn.setAttribute('aria-label', `${lesson.id}-тақырып бойынша бақылау сұрақтарын ашу`);
                 labWorkBtn.onclick = () => {
                     const lab = window.labTexts?.[lesson.id];
                     const labHtml = lab ? `
                         <article class="lab-document" aria-label="${escapeQuizText(lab.title)}">${lab.html}</article>
-                    ` : '<p>Зертханалық жұмыс мәтіні жүктелмеді. Бетті жаңартып көріңіз.</p>';
-                    showModal(`Зертханалық жұмыс №${lesson.id}`, labHtml, true, 'lab-modal-open', labWorkBtn);
+                    ` : '<p>Тақырып бойынша бақылау сұрақтары жүктелмеді. Бетті жаңартып көріңіз.</p>';
+                    showModal(`${lesson.id}-тақырып бойынша бақылау сұрақтары`, labHtml, true, 'lab-modal-open', labWorkBtn);
                 };
             } else {
                 labWorkBtn.style.display = 'none';
@@ -2280,8 +2338,9 @@ document.addEventListener('DOMContentLoaded', () => {
             prevBtn.onclick = () => loadLesson(id - 1);
         }
 
-        renderLessonList();
+        renderLessonList(id !== previousLessonId ? id : null);
         updateProgress();
+        if (focusContent) focusCourseContent();
     }
     // ======================================================
 
@@ -2341,6 +2400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!lesson?.quiz?.length) return;
         const isExam = lesson.type === 'exam';
         currentQuizAttempt = { lessonId, questions: lesson.quiz.map(prepareQuestion), graded: false };
+        updateCourseContext(lesson, true);
         contentTitleEl.textContent = isExam ? 'Бақылау емтиханы' : `Тест: ${lesson.title}`;
         contentTitleEl.classList.remove('document-lecture-title');
         lectureContentEl.style.display = 'none';
@@ -2400,9 +2460,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nextBtn.style.display = 'inline-block';
         nextBtn.textContent = isExam ? 'Емтиханды аяқтау' : 'Тестті аяқтау →';
         nextBtn.onclick = () => completeQuiz(lessonId);
-        contentTitleEl.tabIndex = -1;
-        contentTitleEl.focus({ preventScroll: true });
-        contentTitleEl.scrollIntoView({ block: 'start' });
+        focusCourseContent();
     }
 
     function renderTest(lessonId) { renderQuiz(lessonId); }
@@ -2530,14 +2588,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 10. ФУНКЦИЯ ОБНОВЛЕНИЯ ПРОГРЕССА ---
     // (Бұл функция өзгерген жоқ)
     function updateProgress() {
-        const totalLessons = courseData.length;
-        const completedLessons = courseData.filter(l => l.status === 'completed').length;
+        const lectures = courseData.filter(lesson => lesson.type === 'lecture');
+        const totalLessons = lectures.length;
+        const completedLessons = lectures.filter(lesson => lesson.status === 'completed').length;
         const percentage = Math.round((completedLessons / totalLessons) * 100);
 
-        document.getElementById('progress-text').textContent = `${completedLessons} / ${totalLessons} аяқталды`;
+        document.getElementById('progress-text').textContent = `${completedLessons} / ${totalLessons} тақырып аяқталды`;
         document.getElementById('course-progress-percent').textContent = `${percentage}%`;
         document.getElementById('course-progress-bar').setAttribute('aria-valuenow', String(percentage));
-        document.getElementById('course-progress-bar').setAttribute('aria-valuetext', `${completedLessons} / ${totalLessons} аяқталды`);
+        document.getElementById('course-progress-bar').setAttribute('aria-valuetext', `${completedLessons} / ${totalLessons} тақырып аяқталды`);
         document.getElementById('progress-fill').style.width = `${percentage}%`;
     }
 
@@ -2574,14 +2633,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    renderLessonList();
-    updateProgress();
     // Ссылки с главной страницы открывают только лекции 1–15, без запуска экзамена.
     const requestedLessons = new URLSearchParams(window.location.search).getAll('lesson');
     const initialLessonId = requestedLessons.length === 1 && /^(?:[1-9]|1[0-5])$/.test(requestedLessons[0])
         ? Number(requestedLessons[0])
         : 1;
-    loadLesson(initialLessonId);
+    loadLesson(initialLessonId, { focusContent: false });
 });
 
 document.addEventListener('DOMContentLoaded', () => {

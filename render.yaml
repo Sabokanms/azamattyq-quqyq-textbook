@@ -2,7 +2,7 @@ services:
   - type: web
     name: azamattyq-quqyq
     runtime: static
-    repo: https://github.com/Sabokanms/El_okulyk.git
+    repo: https://github.com/Sabokanms/ElEKTRO_okulyk.git
     branch: main
     buildCommand: "true"
     staticPublishPath: .

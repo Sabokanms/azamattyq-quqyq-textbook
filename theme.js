@@ -19,7 +19,7 @@
       button.setAttribute('aria-label', dark ? 'Жарық тақырыпқа ауысу' : 'Қараңғы тақырыпқа ауысу');
       button.title = dark ? 'Жарық тақырып' : 'Қараңғы тақырып';
     }
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#101b19' : '#f5f4ef');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0d1727' : '#f6f7fa');
   }
   apply(preference || (system.matches ? 'dark' : 'light'));
   document.addEventListener('DOMContentLoaded', () => {
