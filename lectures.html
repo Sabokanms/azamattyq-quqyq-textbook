@@ -10,12 +10,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="lectures.css?v=20261010-academic-blue-1" />
-  <link rel="stylesheet" href="navigation.css?v=20261010-academic-blue-1">
+    <link rel="stylesheet" href="lectures.css?v=20261128-material-style" />
+  <link rel="stylesheet" href="navigation.css?v=20261029-transparent-logo-1">
   <script src="navigation.js?v=20261001-1" defer></script>
-  <link rel="stylesheet" href="reader.css?v=20261008-shared-nav-1">
+  <link rel="stylesheet" href="reader.css?v=20261128-slide-images">
   <link rel="stylesheet" href="theme.css?v=20261010-academic-blue-1">
-  <link rel="stylesheet" href="course-menu.css?v=20261010-academic-blue-1">
+  <link rel="stylesheet" href="course-menu.css?v=20261128-sticky-menu">
 </head>
 <body>
   <header class="site-header">
@@ -27,7 +27,7 @@
       <nav class="site-nav" aria-label="Бет навигациясы">
         <a class="site-nav-link" href="index.html">Басты бет</a>
         <a class="site-nav-link" href="lectures.html" aria-current="page">Дәрістер</a>
-        <a class="site-nav-link" href="authors.html">Авторлар</a>
+        <a class="site-nav-link" href="authors.html">Автор</a>
       </nav>
       <div class="site-header-actions">
         <a class="site-header-cta" href="lectures.html">Оқуға кірісу <svg class="site-header-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></a>
@@ -55,10 +55,16 @@
                         <span class="course-lesson-count">15 тақырып</span>
                     </div>
                     <p class="course-menu-intro">Алғаш рет кірдіңіз бе? 1-тақырыптан бастаңыз немесе өзіңізге қажетті тақырыпты таңдаңыз.</p>
-                    <button class="course-study-btn" id="course-study-btn" type="button">
-                        <span id="course-study-label">1-дәрісті оқу</span>
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
-                    </button>
+                    <div class="course-material-actions" role="group" aria-label="Оқу материалы">
+                        <button class="course-study-btn" id="course-study-btn" type="button" aria-pressed="true" aria-controls="course-reading-pane">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6C9 4 5 4 2 5v14c3-1 7-1 10 1 3-2 7-2 10-1V5c-3-1-7-1-10 1Zm0 0v14"/></svg>
+                            <span id="course-study-label">Лекция</span>
+                        </button>
+                        <button class="course-study-btn" id="course-presentation-btn" type="button" aria-pressed="false" aria-controls="course-presentation-pane">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18M5 4v12h14V4M12 16v4m-4 2 4-3 4 3"/></svg>
+                            <span>Презентация</span>
+                        </button>
+                    </div>
                     <div class="progress-bar-container">
                         <p class="course-progress-label">Сіздің үлгеріміңіз</p>
                         <div class="course-progress-summary">
@@ -83,44 +89,53 @@
                         <span id="course-current-lesson">1 / 15 · Дәріс</span>
                         <a class="course-back-link" href="#course-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Тақырыпты таңдау</a>
                     </div>
-                    <h2 id="content-title" tabindex="-1"></h2>
+                    <div id="course-reading-pane">
+                        <h2 id="content-title" class="course-content-title" tabindex="-1"></h2>
 
-                    <div id="exam-timer-container" style="display: none;">
-                        Қалған уақыт: <span id="exam-timer">60:00</span>
-                    </div>                   
-
-                    <div id="lecture-content" class="content-section">
-                        <div id="lecture-reader"></div>
-
-                        <div id="lecture-actions" class="lecture-actions-container" style="display: none;">
-
-
-
-                            <button id="open-word-btn" class="nav-btn secondary-btn lecture-action-btn" type="button">
-                                <svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Zm0 0v6h6M12 12v6m-3-3 3 3 3-3"/></svg> Word жүктеу
-                            </button>
-                            <a id="open-pdf-link" class="nav-btn secondary-btn lecture-action-btn" href="#" target="_blank" rel="noopener noreferrer"><svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 5H5v14h14v-8M14 3h7v7M10 14 21 3"/></svg> PDF ашу</a>
-
-                            <button id="lab-work-btn" class="nav-btn secondary-btn lecture-action-btn" type="button" aria-haspopup="dialog" aria-controls="modal-overlay">
-                                <svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H5v16h14V5h-4"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M8 11h8M8 15h8M8 18h5"/></svg> Тақырып бойынша бақылау сұрақтары
-                            </button>
-
-                            <button id="case-work-btn" class="nav-btn secondary-btn lecture-action-btn" type="button" aria-haspopup="dialog" aria-controls="modal-overlay">
-                                <svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M7 21h10M4 7h16M5 7l-3 7h6Zm14 0-3 7h6ZM2 14a3 3 0 0 0 6 0m8 0a3 3 0 0 0 6 0"/></svg> Кейстер
-                            </button>
-                            <button id="infographic-btn" class="nav-btn secondary-btn lecture-action-btn" type="button" aria-haspopup="dialog" aria-controls="modal-overlay">
-                                <svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="2" width="8" height="5" rx="1"/><path d="M12 7v5M5 16v-4h14v4"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/></svg> Инфографика
-                            </button>
-                        </div>
+                        <div id="exam-timer-container" style="display: none;">
+                            Қалған уақыт: <span id="exam-timer">60:00</span>
                         </div>
 
-                    <div id="test-content" class="content-section" style="display: none;">
+                        <div id="lecture-content" class="content-section">
+                            <div id="lecture-reader"></div>
+
+                            <div id="lecture-actions" class="lecture-actions-container" style="display: none;">
+
+                                <button id="open-word-btn" class="nav-btn secondary-btn lecture-action-btn" type="button">
+                                    <svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Zm0 0v6h6M12 12v6m-3-3 3 3 3-3"/></svg> Word жүктеу
+                                </button>
+                                <a id="open-pdf-link" class="nav-btn secondary-btn lecture-action-btn" href="#" target="_blank" rel="noopener noreferrer"><svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 5H5v14h14v-8M14 3h7v7M10 14 21 3"/></svg> PDF ашу</a>
+
+                                <button id="lab-work-btn" class="nav-btn secondary-btn lecture-action-btn" type="button" aria-haspopup="dialog" aria-controls="modal-overlay">
+                                    <svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H5v16h14V5h-4"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M8 11h8M8 15h8M8 18h5"/></svg> Тақырып бойынша бақылау сұрақтары
+                                </button>
+
+                                <button id="case-work-btn" class="nav-btn secondary-btn lecture-action-btn" type="button" aria-haspopup="dialog" aria-controls="modal-overlay">
+                                    <svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M7 21h10M4 7h16M5 7l-3 7h6Zm14 0-3 7h6ZM2 14a3 3 0 0 0 6 0m8 0a3 3 0 0 0 6 0"/></svg> Кейстер
+                                </button>
+                                <button id="infographic-btn" class="nav-btn secondary-btn lecture-action-btn" type="button" aria-haspopup="dialog" aria-controls="modal-overlay">
+                                    <svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="2" width="8" height="5" rx="1"/><path d="M12 7v5M5 16v-4h14v4"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/></svg> Инфографика
+                                </button>
+                            </div>
                         </div>
 
-                    <div class="navigation-buttons">
-                        <button id="prev-btn" class="nav-btn secondary-btn" style="display: none;">← Алдыңғы дәріс</button>
-                        <button id="next-btn" class="nav-btn primary-btn">Оқуды бастау →</button>
+                        <div id="test-content" class="content-section" style="display: none;"></div>
+
+                        <div class="navigation-buttons">
+                            <button id="prev-btn" class="nav-btn secondary-btn" style="display: none;">← Алдыңғы дәріс</button>
+                            <button id="next-btn" class="nav-btn primary-btn">Оқуды бастау →</button>
+                        </div>
                     </div>
+
+                    <section id="course-presentation-pane" aria-labelledby="presentation-title" hidden>
+                        <h2 id="presentation-title" class="course-content-title document-lecture-title" tabindex="-1"></h2>
+                        <div id="presentation-reader"></div>
+                        <div class="lecture-actions-container">
+                            <a class="nav-btn secondary-btn lecture-action-btn" id="presentation-download" download>
+                                <svg class="lecture-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/></svg> Презентацияны жүктеу
+                            </a>
+                        </div>
+                    </section>
                 </main>
             </div>
         </div>
@@ -141,12 +156,13 @@
   </footer>
 
     <script src="assets/lecture-texts.js?v=20261001-2" defer></script>
-    <script src="reader.js?v=20261001-2" defer></script>
+    <script src="assets/presentations/decks.js?v=20261128" defer></script>
+    <script src="reader.js?v=20261128-slide-images" defer></script>
     <script src="assets/lab-texts.js?v=20261002-1" defer></script>
     <script src="infographics.js?v=20261004-images-1" defer></script>
     <script src="assets/case-exercises.js?v=20261004-source-audit-1" defer></script>
     <script src="case-work.js?v=20261004-source-audit-1" defer></script>
-    <script src="lectures.js?v=20261010-course-menu-1" defer></script>
+    <script src="lectures.js?v=20261128-inline-reading" defer></script>
 
     <dialog id="quiz-result-dialog" class="quiz-result-dialog" aria-labelledby="quiz-dialog-title" aria-describedby="quiz-dialog-pass-status quiz-dialog-description">
         <button id="quiz-dialog-close" class="quiz-dialog-close" type="button" aria-label="Терезені жабу">×</button>

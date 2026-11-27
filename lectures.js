@@ -2054,6 +2054,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })));
 
     let currentLessonId = 1;
+    let presentationLessonId = null;
     let examTimerInterval = null; 
     const lecturePassScore = 7;
     const progressStorageKey = 'civil-law-course-progress-v1';
@@ -2101,7 +2102,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const courseExamEl = document.getElementById('course-exam');
     const courseStudyBtn = document.getElementById('course-study-btn');
     const courseStudyLabel = document.getElementById('course-study-label');
+    const coursePresentationBtn = document.getElementById('course-presentation-btn');
     const courseCurrentLessonEl = document.getElementById('course-current-lesson');
+    const courseLayout = document.querySelector('.course-layout');
+    const readingPane = document.getElementById('course-reading-pane');
+    const presentationPane = document.getElementById('course-presentation-pane');
+    const presentationReader = document.getElementById('presentation-reader');
+    const presentationDownload = document.getElementById('presentation-download');
+    const presentationTitle = document.getElementById('presentation-title');
     const contentTitleEl = document.getElementById('content-title');
     const lectureContentEl = document.getElementById('lecture-content');
     const testContentEl = document.getElementById('test-content');
@@ -2134,6 +2142,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return `задание/${lesson.id}-лаб.docx`;
     }
 
+    function getLessonTitle(lesson) {
+        return window.lectureTexts?.[lesson.id]?.title || lesson.title;
+    }
+
     // Navigation labels use sentence case; the documented lecture titles stay unchanged.
     function getLessonMenuTitle(lesson) {
         return lesson.title.replace(/^\d+-ТАҚЫРЫП\.\s*/u, '').toLocaleLowerCase('kk')
@@ -2141,20 +2153,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const lessonGroups = [
-        { start: 1, end: 3, title: 'Құқықтың негізі' },
-        { start: 4, end: 7, title: 'Құқық қатысушылары' },
-        { start: 8, end: 12, title: 'Объектілер мен мәмілелер' },
-        { start: 13, end: 15, title: 'Меншік, міндеттеме, шарт' }
+        { start: 1, end: 3, title: 'Азаматтық құқықтың жалпы сипаттамасы және азаматтық-құқықтық қатынастар' },
+        { start: 4, end: 7, title: 'Азаматтық құқық субъектілері' },
+        { start: 8, end: 12, title: 'Азаматтық құқық объектілері және азаматтық құқықтарды жүзеге асырудың негізгі нысандары' },
+        { start: 13, end: 15, title: 'Меншік құқығы, міндеттемелік құқық және шарт' }
     ];
 
     function createLessonButton(lesson) {
         const item = document.createElement('button');
         const isExam = lesson.type === 'exam';
-        const isActive = lesson.id === currentLessonId;
+        const presenting = presentationLessonId !== null;
+        const isActive = lesson.id === (presentationLessonId ?? currentLessonId);
         const isCompleted = lesson.status === 'completed';
         const state = isActive ? 'Қазір ашық' : isCompleted ? 'Аяқталды' : '';
         const title = isExam ? 'Қорытынды емтихан' : getLessonMenuTitle(lesson);
-        const subtitle = isExam ? `${lesson.quiz.length} сұрақ · 15 тақырып${state ? ` · ${state}` : ''}` : state;
+        const detail = isExam ? `${lesson.quiz.length} сұрақ · 15 тақырып` : '';
+        const subtitle = [detail, state].filter(Boolean).join(' · ');
         const iconPath = isCompleted
             ? '<path d="m5 12 4 4L19 6"/>'
             : '<path d="m9 5 7 7-7 7"/>';
@@ -2177,8 +2191,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="lesson-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${iconPath}</svg></span>
         `;
         item.setAttribute('aria-label', `${isExam ? title : lesson.title}${subtitle ? `. ${subtitle}` : ''}`);
+        if (presenting) item.title = `${window.coursePresentations[lesson.id].slides.length} слайд`;
         if (isActive) item.setAttribute('aria-current', 'true');
-        item.addEventListener('click', () => loadLesson(lesson.id));
+        item.setAttribute('aria-controls', presenting ? presentationPane.id : readingPane.id);
+        item.addEventListener('click', () => {
+            if (presenting) showPresentation(lesson.id);
+            else loadLesson(lesson.id);
+        });
         return item;
     }
 
@@ -2187,17 +2206,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .map(group => [Number(group.dataset.group), group.open]));
         lessonListEl.replaceChildren();
 
-        lessonGroups.forEach(group => {
+        lessonGroups.forEach((group, index) => {
             const details = document.createElement('details');
             details.className = 'lesson-group';
             details.dataset.group = group.start;
             const containsLesson = id => id >= group.start && id <= group.end;
             details.open = containsLesson(openLessonId)
-                || (openGroups.has(group.start) ? openGroups.get(group.start) : containsLesson(currentLessonId));
+                || (openGroups.has(group.start) ? openGroups.get(group.start) : containsLesson(presentationLessonId ?? currentLessonId));
             details.innerHTML = `
                 <summary class="lesson-group-summary">
                     <span class="lesson-group-heading">
-                        <span class="lesson-group-range">${String(group.start).padStart(2, '0')}–${String(group.end).padStart(2, '0')} тақырып</span>
+                        <span class="lesson-group-range">${index + 1}-МОДУЛЬ. (${group.start}–${group.end} тақырыптар)</span>
                         <span class="lesson-group-title">${escapeQuizText(group.title)}</span>
                     </span>
                     <svg class="lesson-group-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
@@ -2207,6 +2226,7 @@ document.addEventListener('DOMContentLoaded', () => {
             list.className = 'lesson-group-list';
             list.start = group.start;
             courseData.filter(lesson => lesson.type === 'lecture' && containsLesson(lesson.id)).forEach(lesson => {
+                if (presentationLessonId !== null && !window.coursePresentations?.[lesson.id]) return;
                 const row = document.createElement('li');
                 row.appendChild(createLessonButton(lesson));
                 list.appendChild(row);
@@ -2215,23 +2235,88 @@ document.addEventListener('DOMContentLoaded', () => {
             lessonListEl.appendChild(details);
         });
 
-        courseExamEl.replaceChildren(createLessonButton(courseData.find(lesson => lesson.type === 'exam')));
+        if (presentationLessonId === null) {
+            courseExamEl.replaceChildren(createLessonButton(courseData.find(lesson => lesson.type === 'exam')));
+        }
     }
 
     function focusCourseContent() {
-        contentTitleEl.focus({ preventScroll: true });
-        contentTitleEl.scrollIntoView({ block: 'start' });
+        const heading = presentationLessonId === null ? contentTitleEl : presentationTitle;
+        heading.focus({ preventScroll: true });
+        heading.scrollIntoView({ block: 'start' });
     }
 
-    function updateCourseContext(lesson, isQuiz = false) {
+    function updateCourseContext(lesson) {
         const isExam = lesson.type === 'exam';
-        courseCurrentLessonEl.textContent = isExam ? 'Қорытынды емтихан' : `${lesson.id} / 15 · ${isQuiz ? 'Тест' : 'Дәріс'}`;
+        const isQuiz = currentQuizAttempt !== null;
+        const presenting = presentationLessonId !== null;
+        courseLayout.dataset.material = presenting ? 'presentation' : 'lecture';
+        readingPane.hidden = presenting;
+        presentationPane.hidden = !presenting;
+        courseStudyBtn.setAttribute('aria-pressed', String(!presenting));
+        coursePresentationBtn.setAttribute('aria-pressed', String(presenting));
+        const material = presenting ? 'Презентация' : isQuiz ? 'Тест' : 'Дәріс';
+        courseCurrentLessonEl.textContent = isExam ? 'Қорытынды емтихан' : `${lesson.id} / 15 · ${material}`;
         courseStudyLabel.textContent = isQuiz
             ? isExam ? 'Емтиханға оралу' : 'Тестке оралу'
-            : isExam ? 'Емтихан туралы' : `${lesson.id}-дәрісті оқу`;
+            : isExam ? 'Емтихан туралы' : 'Лекция';
+        courseStudyBtn.setAttribute('aria-label', isExam || isQuiz ? courseStudyLabel.textContent : `Лекция · ${lesson.id}-тақырып`);
+        coursePresentationBtn.hidden = isExam || !window.coursePresentations?.[lesson.id];
+        if (!coursePresentationBtn.hidden) {
+            coursePresentationBtn.setAttribute('aria-label', `Презентация · ${lesson.id}-тақырып`);
+        }
     }
 
-    courseStudyBtn.addEventListener('click', focusCourseContent);
+    function syncMaterialLink(id, material) {
+        if (id === 16 || location.protocol === 'file:') return;
+        const url = new URL(location.href);
+        const selectedMaterial = url.searchParams.get('material') || 'lecture';
+        if ((url.searchParams.get('lesson') || '1') === String(id) && selectedMaterial === material) return;
+        url.searchParams.set('lesson', id);
+        if (material === 'presentation') url.searchParams.set('material', material);
+        else url.searchParams.delete('material');
+        url.hash = '';
+        history.replaceState(history.state, '', url);
+    }
+
+    function showPresentation(id, { focusContent = true } = {}) {
+        const deck = window.coursePresentations?.[id];
+        if (!deck) return;
+        if (presentationLessonId === id) {
+            if (focusContent) focusCourseContent();
+            return;
+        }
+        const lesson = courseData.find(item => item.id === id);
+        const previousId = presentationLessonId ?? currentLessonId;
+        presentationLessonId = id;
+        syncMaterialLink(id, 'presentation');
+        updateCourseContext(lesson);
+        presentationTitle.textContent = getLessonTitle(lesson);
+        window.LectureReader.render(presentationReader, id, 'presentation');
+        presentationDownload.href = `презентации/${encodeURIComponent(deck.file)}`;
+        presentationDownload.download = deck.file;
+        renderLessonList(id === previousId ? null : id);
+        if (focusContent) focusCourseContent();
+    }
+
+    coursePresentationBtn.addEventListener('click', () => {
+        showPresentation(presentationLessonId ?? currentLessonId, { focusContent: false });
+    });
+    courseStudyBtn.addEventListener('click', () => {
+        if (presentationLessonId !== null) {
+            const selectedId = presentationLessonId;
+            presentationLessonId = null;
+            if (selectedId !== currentLessonId && !currentQuizAttempt) {
+                loadLesson(selectedId);
+                return;
+            }
+            // A test stays mounted while the student consults slides from any topic.
+            syncMaterialLink(currentLessonId, 'lecture');
+            updateCourseContext(courseData.find(lesson => lesson.id === currentLessonId));
+            renderLessonList(selectedId === currentLessonId ? null : currentLessonId);
+        }
+        focusCourseContent();
+    });
 
     // --- 4. ФУНКЦИЯ ЗАГРУЗКИ КОНТЕНТА (ЛЕКЦИЯ ИЛИ ЭКЗАМЕН) ---
     // ===== БҰЛ ФУНКЦИЯ ЖАҢАРТЫЛДЫ (ЭТА ФУНКЦИЯ ОБНОВЛЕНА) =====
@@ -2239,6 +2324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadLesson(id, { focusContent = true } = {}) {
         const lesson = courseData.find(l => l.id === id);
         if (!lesson) return;
+        if (focusContent) syncMaterialLink(id, 'lecture');
         const previousLessonId = currentLessonId;
         currentQuizAttempt = null;
 
@@ -2252,7 +2338,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentLessonId = id;
         syncLessonStatuses();
-        contentTitleEl.textContent = window.lectureTexts?.[id]?.title || lesson.title;
+        contentTitleEl.textContent = getLessonTitle(lesson);
         contentTitleEl.classList.toggle('document-lecture-title', lesson.type === 'lecture');
 
         const isLecture = lesson.type === 'lecture';
@@ -2400,7 +2486,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!lesson?.quiz?.length) return;
         const isExam = lesson.type === 'exam';
         currentQuizAttempt = { lessonId, questions: lesson.quiz.map(prepareQuestion), graded: false };
-        updateCourseContext(lesson, true);
+        updateCourseContext(lesson);
         contentTitleEl.textContent = isExam ? 'Бақылау емтиханы' : `Тест: ${lesson.title}`;
         contentTitleEl.classList.remove('document-lecture-title');
         lectureContentEl.style.display = 'none';
@@ -2634,11 +2720,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // Ссылки с главной страницы открывают только лекции 1–15, без запуска экзамена.
-    const requestedLessons = new URLSearchParams(window.location.search).getAll('lesson');
+    const courseParams = new URLSearchParams(window.location.search);
+    const requestedLessons = courseParams.getAll('lesson');
     const initialLessonId = requestedLessons.length === 1 && /^(?:[1-9]|1[0-5])$/.test(requestedLessons[0])
         ? Number(requestedLessons[0])
         : 1;
     loadLesson(initialLessonId, { focusContent: false });
+    if (courseParams.get('material') === 'presentation') {
+        showPresentation(initialLessonId, { focusContent: false });
+    }
 });
 
 document.addEventListener('DOMContentLoaded', () => {

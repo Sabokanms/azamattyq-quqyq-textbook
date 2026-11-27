@@ -39,7 +39,12 @@
 .reader-prose li[data-list-marker]::marker { content: attr(data-list-marker) '  '; }
 .reader-prose strong { font-weight: 700; }
 .reader-prose ::selection { background: var(--panel-2); color: var(--text); }
-#content-title.document-lecture-title { font-family: 'Times New Roman', Times, serif; font-size: 22px; font-weight: 700; text-align: center; letter-spacing: normal; line-height: 1.4; }
+.reader-slides { display: grid; gap: 32px; margin: 28px 0 0; }
+.reader-slide { min-width: 0; margin: 0; }
+.reader-slide-image { display: block; width: 100%; height: auto; border-radius: 6px; box-shadow: 0 0 0 1px var(--border); }
+.reader-slide figcaption { display: grid; place-items: center; min-height: 28px; margin-top: 12px; padding: 0 32px; color: var(--muted); font: 600 14px/1.5 var(--font-primary); font-variant-numeric: tabular-nums; text-align: center; }
+.reader-slide .reader-bookmark { top: auto; right: 0; bottom: 0; }
+.course-content-title.document-lecture-title { font-family: 'Times New Roman', Times, serif; font-size: 22px; font-weight: 700; text-align: center; letter-spacing: normal; line-height: 1.4; }
 #lecture-reader:empty { display: none; }
 @media (max-width: 720px) {
   .reader-toolbar { padding: 14px; gap: 12px; }
@@ -48,5 +53,5 @@
   .reader-paragraph { scroll-margin-top: 156px; }
   .reader-prose { line-height: 1.6; text-align: left; }
   .reader-bookmark { opacity: .55; }
-  #content-title.document-lecture-title { font-size: 20px; }
+  .course-content-title.document-lecture-title { font-size: 20px; }
 }

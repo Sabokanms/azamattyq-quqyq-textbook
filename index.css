@@ -1,4 +1,12 @@
 /* Civil law: a quiet editorial system with an animated sculptural cover. */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('assets/fonts/lora-variable.woff2') format('woff2');
+}
+
 :root {
   --bg: #f6f7fa;
   --ink: #16243a;
@@ -116,6 +124,18 @@ html.motion-ready [data-reveal].is-visible { opacity: 1; transform: translate3d(
 .hero { position: relative; padding-bottom: 54px; }
 .hero-content { min-width: 0; padding-bottom: 12px; }
 .hero-eyebrow { font-size: .8125rem; letter-spacing: .13em; }
+.home-page #hero-title {
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: clamp(52px, 6.2vw, 86px);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -.025em;
+}
+.home-page #hero-title .hero-title-detail {
+  margin-top: 18px;
+  font-weight: 500;
+  letter-spacing: -.015em;
+}
 .title-accent { color: var(--forest); }
 .title-period { color: var(--terra); }
 .hero-title-detail { display: block; margin-top: 24px; font-size: clamp(1.375rem, 2.2vw, 1.875rem); font-weight: 600; line-height: 1.4; letter-spacing: -.025em; }
@@ -345,6 +365,7 @@ body.motion-paused .art-parallax, body.motion-reduced .art-parallax, body.motion
   .header-cta { font-size: 9px; gap: 8px; padding-inline: 11px; }
   .hero { margin-top: 36px; grid-template-columns: 1fr 1fr; gap: 22px; padding-bottom: 44px; }
   h1 { font-size: clamp(44px, 7.45vw, 62px); }
+  .home-page #hero-title { font-size: clamp(42px, 6.85vw, 54px); }
   h2 { font-size: 36px; }
   .hero .eyebrow { font-size: .8125rem; gap: 6px; letter-spacing: .09em; margin-bottom: 20px; }
   .hero-content { padding: 0; }
@@ -445,6 +466,7 @@ body.motion-paused .art-parallax, body.motion-reduced .art-parallax, body.motion
   .hero-content { padding: 0; }
   .hero .eyebrow { font-size: .8125rem; margin-bottom: 22px; letter-spacing: .12em; gap: 9px; }
   h1 { font-size: clamp(49px, 12.5vw, 76px); line-height: 1.02; }
+  .home-page #hero-title { font-size: clamp(42px, 13vw, 72px); }
   .hero-edition { font-size: .8125rem; gap: 12px; margin-top: 23px; }
   .edition-line { width: 33px; }
   .hero-description { max-width: 390px; font-size: 1.125rem; line-height: 1.85; margin-top: 20px; }
